@@ -8,20 +8,31 @@ FEATURE_NUM = 7
 LANGUAGE_POPULARITY = {"<javascript>": 0.698, "<html>": 0.685, "<css>": 0.651, "<sql>": 0.57, "<java>": 0.453, "<shell>": 0.398, "<bash>": 0.398, "<python>": 0.388, "<c#>": 0.344, "<php>":0.307, "<c++>": 0.254, "<c>": 0.23, "<typescript>": 0.174, "<ruby>": 0.101, "<swift>": 0.081, "<assembly>": 0.074, "<go>": 0.071, "<objective-c>": 0.07, "<vb.net>": 0.067, "<r>": 0.061, "<matlab>": 0.058, "<vba>": 0.049, "<kotlin>": 0.045, "<scala>": 0.044, "<groovy>": 0.043, "<perl>": 0.042, "no-tag": 0.01}
 
 # features:
-# language -- Zhiyuan
-# userReputation -- Chong
+# languagePoularity -- Zhiyuan
+# ownerUserReputation -- Chong
 # codeIncluded -- done
 # bodyLength  -- done
 # postTypeID  -- done (could be re-consider)
 # titleLength -- done
 
-# def calculate_popularity(viewCount, ...):
+
+def calculate_popularity(viewCount, favoriteCount):
+    return list(map(lambda x, y: 0.9 * x + 0.1 * y, viewCount, favoriteCount))
 
 
-def calculate_w(X, Y):
-    # function to calculate the theta w
+def calculate_theta(X, Y):
+    # function to calculate the theta
     # input should be numpy arrays
-    return np.matmul(np.matmul(inv(np.matmul(X.transpose(), X)), X.transpose()), Y)
+    print("here")
+    # return np.matmul(np.matmul(inv(np.matmul(X.transpose(), X)), X.transpose()), Y)
+    print(X.shape)
+    a = np.matmul(X.transpose(), X)
+    for ele in a:
+        print(ele)
+    # a = np.matmul(X.transpose(), X)
+    # b = np.dot(X.transpose(), X)
+    
+    return inv(a)
 
 
 def perdict_y(x, w):
@@ -52,7 +63,7 @@ def retrieve_valid_data(post_data, user_reputation_data):
     titleList = list(data["Title"])
     userIdList = list(data["OwnerUserId"])
 
-    #the following line is the features selected
+    #the following line is the features selected for X
     codeIncluded = list()
     bodyLength = list()
     postTypeID = list()
@@ -60,11 +71,16 @@ def retrieve_valid_data(post_data, user_reputation_data):
     ownerUserReputation = list()
     languagePoularity = list()
 
+    # the following line are features to combine
+    viewCount = list()
+    favoriteCount = list()
+
     print("total posts: {}".format(len(viewCountList)))
     counter = 0
     for i in range(len(favoriteCountList)):
         if not math.isnan(favoriteCountList[i]) and not math.isnan(viewCountList[i]):
             counter += 1
+            # for X
             codeIncluded.append(is_code_included(bodyList[i]))
             bodyLength.append(count_body_length(bodyList[i]))
             postTypeID.append(postTypeList[i])
@@ -72,6 +88,11 @@ def retrieve_valid_data(post_data, user_reputation_data):
             reputaion = reputation_dict[userIdList[i]] if userIdList[i] in reputation_dict else 0
             ownerUserReputation.append(reputaion)
             languagePoularity.append(retrieve_tag_language_pop(str(tagList[i])))
+
+            # for Y
+            viewCount.append(viewCountList[i])
+            favoriteCount.append(favoriteCountList[i])
+
             # if counter < 20:
             #     print(userIdList[i])
             #     print(reputation_dict[userIdList[i]])
@@ -79,7 +100,23 @@ def retrieve_valid_data(post_data, user_reputation_data):
             # if "c++" in tagList[i]:
             #     print(tagList[i])
 
+    popularityCount = calculate_popularity(viewCount, favoriteCount)
+    cutoff = int(counter*0.8)
+    training_data_X = np.zeros(shape=(cutoff, FEATURE_NUM))
+    test_data_X = np.zeros(shape=(int(counter - cutoff), FEATURE_NUM))
+    training_data_Y = np.zeros(shape=(cutoff, 1))
+    test_data_Y = np.zeros(shape=(int(counter - cutoff), 1))
+
+    for i in range(counter):
+        if i < cutoff:
+            training_data_X[i] = [1, languagePoularity[i], ownerUserReputation[i], codeIncluded[i], bodyLength[i], postTypeID[i], titleLength[i]]
+        else:
+            test_data_X[i - cutoff] = [1, languagePoularity[i], ownerUserReputation[i], codeIncluded[i], bodyLength[i], postTypeID[i], titleLength[i]]
+
+    training_data_Y = popularityCount[:cutoff]
+    test_data_Y = popularityCount[cutoff:]
     print("available posts: {}".format(counter))
+    return training_data_X, test_data_X, training_data_Y, test_data_Y
 
 
 def is_code_included(body):
@@ -118,10 +155,17 @@ def generate_user_reputation_query(input):
     return query
 
 
-retrieve_valid_data("data.csv", "user_reputation_table.csv")
+def main(data_file, user_reputation_file):
+    training_data_X, test_data_X, training_data_Y, test_data_Y = retrieve_valid_data(data_file, user_reputation_file)
+    theta = calculate_theta(training_data_X, training_data_Y)
+    print(type(theta))
+
+
+
 
 # generate_user_reputation_query("data.csv")
-print(len(list(LANGUAGE_POPULARITY.keys())))
+main("data.csv", "user_reputation_table.csv")
+
 
 
 
