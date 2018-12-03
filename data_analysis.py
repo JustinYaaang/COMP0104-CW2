@@ -24,15 +24,16 @@ def calculate_theta(X, Y):
     # function to calculate the theta
     # input should be numpy arrays
     print("here")
-    # return np.matmul(np.matmul(inv(np.matmul(X.transpose(), X)), X.transpose()), Y)
-    print(X.shape)
-    a = np.matmul(X.transpose(), X)
-    for ele in a:
-        print(ele)
+    return np.matmul(np.matmul(inv(np.matmul(X.transpose(), X)), X.transpose()), Y)
+    # print(X.shape)
     # a = np.matmul(X.transpose(), X)
-    # b = np.dot(X.transpose(), X)
+    # print(a.shape)
+    # for ele in a:
+    #     print(ele)
+    # # a = np.matmul(X.transpose(), X)
+    # # b = np.dot(X.transpose(), X)
     
-    return inv(a)
+    # return inv(a)
 
 
 def perdict_y(x, w):
@@ -102,16 +103,18 @@ def retrieve_valid_data(post_data, user_reputation_data):
 
     popularityCount = calculate_popularity(viewCount, favoriteCount)
     cutoff = int(counter*0.8)
-    training_data_X = np.zeros(shape=(cutoff, FEATURE_NUM))
-    test_data_X = np.zeros(shape=(int(counter - cutoff), FEATURE_NUM))
+    training_data_X = np.zeros(shape=(cutoff, FEATURE_NUM - 1))
+    test_data_X = np.zeros(shape=(int(counter - cutoff), FEATURE_NUM - 1))
     training_data_Y = np.zeros(shape=(cutoff, 1))
     test_data_Y = np.zeros(shape=(int(counter - cutoff), 1))
 
     for i in range(counter):
         if i < cutoff:
-            training_data_X[i] = [1, languagePoularity[i], ownerUserReputation[i], codeIncluded[i], bodyLength[i], postTypeID[i], titleLength[i]]
+            # training_data_X[i] = [1, languagePoularity[i], ownerUserReputation[i], codeIncluded[i], bodyLength[i], postTypeID[i], titleLength[i]]
+            training_data_X[i] = [1, languagePoularity[i], ownerUserReputation[i], codeIncluded[i], bodyLength[i], titleLength[i]]
         else:
-            test_data_X[i - cutoff] = [1, languagePoularity[i], ownerUserReputation[i], codeIncluded[i], bodyLength[i], postTypeID[i], titleLength[i]]
+            # test_data_X[i - cutoff] = [1, languagePoularity[i], ownerUserReputation[i], codeIncluded[i], bodyLength[i], postTypeID[i], titleLength[i]]
+            test_data_X[i - cutoff] = [1, languagePoularity[i], ownerUserReputation[i], codeIncluded[i], bodyLength[i], titleLength[i]]
 
     training_data_Y = popularityCount[:cutoff]
     test_data_Y = popularityCount[cutoff:]
@@ -158,7 +161,11 @@ def generate_user_reputation_query(input):
 def main(data_file, user_reputation_file):
     training_data_X, test_data_X, training_data_Y, test_data_Y = retrieve_valid_data(data_file, user_reputation_file)
     theta = calculate_theta(training_data_X, training_data_Y)
+
     print(type(theta))
+    predict_training_X = np.dot(training_data_X, theta.transpose())
+    print(predict_training_Y)
+    print(predict_training_Y.shape)
 
 
 
