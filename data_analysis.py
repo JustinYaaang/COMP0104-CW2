@@ -4,6 +4,8 @@ import math
 from numpy.linalg import inv
 
 AVERAGE_REPUTAION = 1247
+FEATURE_NUM = 7
+LANGUAGE_POPULARITY = {"<javascript>": 0.698, "<html>": 0.685, "<css>": 0.651, "<sql>": 0.57, "<java>": 0.453, "<shell>": 0.398, "<bash>": 0.398, "<python>": 0.388, "<c#>": 0.344, "<php>":0.307, "<c++>": 0.254, "<c>": 0.23, "<typescript>": 0.174, "<ruby>": 0.101, "<swift>": 0.081, "<assembly>": 0.074, "<go>": 0.071, "<objective-c>": 0.07, "<vb.net>": 0.067, "<r>": 0.061, "<matlab>": 0.058, "<vba>": 0.049, "<kotlin>": 0.045, "<scala>": 0.044, "<groovy>": 0.043, "<perl>": 0.042, "no-tag": 0.01}
 
 # features:
 # language -- Zhiyuan
@@ -51,7 +53,12 @@ def retrieve_valid_data(post_data, user_reputation_data):
     userIdList = list(data["OwnerUserId"])
 
     #the following line is the features selected
-    codeIncluded, bodyLength, postTypeID, titleLength, ownerUserReputation = list(), list(), list(), list(), list()
+    codeIncluded = list()
+    bodyLength = list()
+    postTypeID = list()
+    titleLength = list()
+    ownerUserReputation = list()
+    languagePoularity = list()
 
     print("total posts: {}".format(len(viewCountList)))
     counter = 0
@@ -64,13 +71,13 @@ def retrieve_valid_data(post_data, user_reputation_data):
             titleLength.append(len(titleList[i]))
             reputaion = reputation_dict[userIdList[i]] if userIdList[i] in reputation_dict else 0
             ownerUserReputation.append(reputaion)
+            languagePoularity.append(retrieve_tag_language_pop(str(tagList[i])))
             # if counter < 20:
             #     print(userIdList[i])
             #     print(reputation_dict[userIdList[i]])
 
             # if "c++" in tagList[i]:
             #     print(tagList[i])
-            
 
     print("available posts: {}".format(counter))
 
@@ -81,6 +88,16 @@ def is_code_included(body):
 
 def count_body_length(body):
     return len(body)
+
+
+def retrieve_tag_language_pop(tag):
+    if not tag:
+        return LANGUAGE_POPULARITY["no-tag"]
+    pop = 0
+    for key in LANGUAGE_POPULARITY.keys():
+        if key in tag:
+            pop += LANGUAGE_POPULARITY[key]
+    return pop if pop > 0 else LANGUAGE_POPULARITY["no-tag"]
 
 
 def generate_user_reputation_query(input):
@@ -104,6 +121,7 @@ def generate_user_reputation_query(input):
 retrieve_valid_data("data.csv", "user_reputation_table.csv")
 
 # generate_user_reputation_query("data.csv")
+print(len(list(LANGUAGE_POPULARITY.keys())))
 
 
 
