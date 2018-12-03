@@ -3,9 +3,11 @@ import pandas as pd
 import math
 from numpy.linalg import inv
 
+AVERAGE_REPUTAION = 1247
+
 # features:
-# language
-# userReputation
+# language -- Zhiyuan
+# userReputation -- Chong
 # codeIncluded -- done
 # bodyLength  -- done
 # postTypeID  -- done (could be re-consider)
@@ -24,15 +26,32 @@ def perdict_y(x, w):
     return np.matmul(w, x)
 
 
-def retrieve_valid_data(input):
-    data = pd.read_csv(input)
+def form_user_dict(user_reputation_data):
+    userReputation = pd.read_csv(user_reputation_data)
+    idList = list(userReputation["Id"])
+    reputationList = list(userReputation["Reputation"])
+    reputation_dict = {}
+    for i in range(len(idList)):
+        reputation_dict[idList[i]] = reputationList[i]
+
+    return reputation_dict
+
+
+def retrieve_valid_data(post_data, user_reputation_data):
+    data = pd.read_csv(post_data)
+    reputation_dict = form_user_dict(user_reputation_data)
+
+    # the following lines are attribute from csv
     viewCountList = list(data['ViewCount'])
     favoriteCountList = list(data["FavoriteCount"])
     tagList = list(data["Tags"])
     bodyList = list(data["Body"])
     postTypeList = list(data["PostTypeId"])
     titleList = list(data["Title"])
-    codeIncluded, bodyLength, postTypeID, titleLength = list(), list(), list(), list()
+    userIdList = list(data["OwnerUserId"])
+
+    #the following line is the features selected
+    codeIncluded, bodyLength, postTypeID, titleLength, ownerUserReputation = list(), list(), list(), list(), list()
 
     print("total posts: {}".format(len(viewCountList)))
     counter = 0
@@ -43,9 +62,15 @@ def retrieve_valid_data(input):
             bodyLength.append(count_body_length(bodyList[i]))
             postTypeID.append(postTypeList[i])
             titleLength.append(len(titleList[i]))
-
+            reputaion = reputation_dict[userIdList[i]] if userIdList[i] in reputation_dict else 0
+            ownerUserReputation.append(reputaion)
             # if counter < 20:
+            #     print(userIdList[i])
+            #     print(reputation_dict[userIdList[i]])
+
+            # if "c++" in tagList[i]:
             #     print(tagList[i])
+            
 
     print("available posts: {}".format(counter))
 
@@ -58,5 +83,27 @@ def count_body_length(body):
     return len(body)
 
 
-retrieve_valid_data("data.csv")
+def generate_user_reputation_query(input):
+    data = pd.read_csv(input)
+    viewCountList = list(data['ViewCount'])
+    favoriteCountList = list(data["FavoriteCount"])
+    ownerUserIdList = list(data["OwnerUserId"])
+    query = ""
+
+    # "#standardSQL \n Select Id, Reputation from `sotorrent-org.2018_09_23.Users`"
+
+    for i in range(len(favoriteCountList)):
+        if not math.isnan(favoriteCountList[i]) and not math.isnan(viewCountList[i]) and not math.isnan(ownerUserIdList[i]):
+            query = query + "or Id = " + str(int(ownerUserIdList[i])) + " "
+    query = "where " + query[3:]
+    print(query)
+
+    return query
+
+
+retrieve_valid_data("data.csv", "user_reputation_table.csv")
+
+# generate_user_reputation_query("data.csv")
+
+
 
