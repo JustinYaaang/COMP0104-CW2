@@ -2,10 +2,14 @@ import numpy as np
 import pandas as pd
 import math
 from numpy.linalg import inv
+from sklearn.linear_model import LinearRegression
+
+model = LinearRegression()
 
 AVERAGE_REPUTAION = 1247
 FEATURE_NUM = 7
 LANGUAGE_POPULARITY = {"<javascript>": 0.698, "<html>": 0.685, "<css>": 0.651, "<sql>": 0.57, "<java>": 0.453, "<shell>": 0.398, "<bash>": 0.398, "<python>": 0.388, "<c#>": 0.344, "<php>":0.307, "<c++>": 0.254, "<c>": 0.23, "<typescript>": 0.174, "<ruby>": 0.101, "<swift>": 0.081, "<assembly>": 0.074, "<go>": 0.071, "<objective-c>": 0.07, "<vb.net>": 0.067, "<r>": 0.061, "<matlab>": 0.058, "<vba>": 0.049, "<kotlin>": 0.045, "<scala>": 0.044, "<groovy>": 0.043, "<perl>": 0.042, "no-tag": 0.01}
+BOUNDARY = 200
 
 # features:
 # languagePoularity -- Zhiyuan
@@ -25,16 +29,7 @@ def calculate_theta(X, Y):
     # input should be numpy arrays
     print("here")
     return np.matmul(np.matmul(inv(np.matmul(X.transpose(), X)), X.transpose()), Y)
-    # print(X.shape)
-    # a = np.matmul(X.transpose(), X)
-    # print(a.shape)
-    # for ele in a:
-    #     print(ele)
-    # # a = np.matmul(X.transpose(), X)
-    # # b = np.dot(X.transpose(), X)
     
-    # return inv(a)
-
 
 def perdict_y(x, w):
     return np.matmul(w, x)
@@ -93,7 +88,8 @@ def retrieve_valid_data(post_data, user_reputation_data):
             # for Y
             viewCount.append(viewCountList[i])
             favoriteCount.append(favoriteCountList[i])
-
+            # if counter == 5:
+            #     break
             # if counter < 20:
             #     print(userIdList[i])
             #     print(reputation_dict[userIdList[i]])
@@ -160,12 +156,35 @@ def generate_user_reputation_query(input):
 
 def main(data_file, user_reputation_file):
     training_data_X, test_data_X, training_data_Y, test_data_Y = retrieve_valid_data(data_file, user_reputation_file)
-    theta = calculate_theta(training_data_X, training_data_Y)
+    model.fit(training_data_X, training_data_Y)
+    predicted_training_Y = list(model.predict(training_data_X))
+    counter = 0
+    print("for training data")
+    print("max data in training Y is: {}".format(max(training_data_Y)))
+    for i in range(len(predicted_training_Y)):
+        if abs(predicted_training_Y[i] - training_data_Y[i]) < BOUNDARY:
+            counter += 1
+    print("Training data: the accuracy rate with boundary {} is {}.".format(BOUNDARY, counter/len(predicted_training_Y)))
 
-    print(type(theta))
-    predict_training_X = np.dot(training_data_X, theta.transpose())
-    print(predict_training_Y)
-    print(predict_training_Y.shape)
+    print("\nfor test data")
+    counter2 = 0
+
+    predicted_test_Y = list(model.predict(test_data_X))
+    print("max data in test Y is: {}".format(max(test_data_Y)))
+    for j in range(len(predicted_test_Y)):
+        # print("{} {}".format(predicted_test_Y[j], test_data_Y[j]))
+        if abs(predicted_test_Y[j] - test_data_Y[j]) < 200:
+            counter2 += 1
+    print("Test data: the accuracy rate with boundary {} is {}.".format(BOUNDARY, counter2/len(predicted_test_Y)))
+
+
+
+
+    # print(model.score(training_data_X, training_data_Y))
+    # print(model.score(test_data_X, test_data_Y))
+    # theta = calculate_theta(training_data_X, training_data_Y)
+
+    # predict_training_X = np.dot(training_data_X, theta.transpose())
 
 
 
