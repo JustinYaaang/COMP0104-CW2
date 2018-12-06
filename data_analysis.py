@@ -3,6 +3,7 @@ import pandas as pd
 import math
 from numpy.linalg import inv
 from sklearn.linear_model import LinearRegression
+from sklearn.metrics import r2_score
 
 model = LinearRegression()
 
@@ -80,7 +81,7 @@ def retrieve_valid_data(post_data, user_reputation_data):
             codeIncluded.append(is_code_included(bodyList[i]))
             bodyLength.append(count_body_length(bodyList[i]))
             postTypeID.append(postTypeList[i])
-            titleLength.append(len(titleList[i]))
+            titleLength.append(count_body_length(titleList[i]))
             reputaion = reputation_dict[userIdList[i]] if userIdList[i] in reputation_dict else 0
             ownerUserReputation.append(reputaion)
             languagePoularity.append(retrieve_tag_language_pop(str(tagList[i])))
@@ -125,6 +126,9 @@ def is_code_included(body):
 def count_body_length(body):
     return len(body)
 
+def count_title_length(title):
+    return len(title)
+
 
 def retrieve_tag_language_pop(tag):
     if not tag:
@@ -157,8 +161,16 @@ def generate_user_reputation_query(input):
 def main(data_file, user_reputation_file):
     training_data_X, test_data_X, training_data_Y, test_data_Y = retrieve_valid_data(data_file, user_reputation_file)
     model.fit(training_data_X, training_data_Y)
-    predicted_training_Y = list(model.predict(training_data_X))
-    counter = 0
+    # predicted_training_Y = list(model.predict(training_data_X))
+    
+    predicted_test_Y = list(model.predict(test_data_X))
+    print "test_data_Y is:",test_data_Y
+    print "-------------------------------------------"
+    print "predicted_test_Y is:",predicted_test_Y
+    R_Square = r2_score(test_data_Y, predicted_test_Y)
+    print "R_Square is ",R_Square
+
+    """ counter = 0
     print("for training data")
     print("max data in training Y is: {}".format(max(training_data_Y)))
     for i in range(len(predicted_training_Y)):
@@ -169,16 +181,13 @@ def main(data_file, user_reputation_file):
     print("\nfor test data")
     counter2 = 0
 
-    predicted_test_Y = list(model.predict(test_data_X))
     print("max data in test Y is: {}".format(max(test_data_Y)))
     for j in range(len(predicted_test_Y)):
         # print("{} {}".format(predicted_test_Y[j], test_data_Y[j]))
-        if abs(predicted_test_Y[j] - test_data_Y[j]) < 200:
+        if abs(predicted_test_Y[j] - test_data_Y[j]) < BOUNDARY:
             counter2 += 1
     print("Test data: the accuracy rate with boundary {} is {}.".format(BOUNDARY, counter2/len(predicted_test_Y)))
-
-
-
+ """
 
     # print(model.score(training_data_X, training_data_Y))
     # print(model.score(test_data_X, test_data_Y))
