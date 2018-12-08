@@ -164,30 +164,12 @@ def main(data_file, user_reputation_file):
     # predicted_training_Y = list(model.predict(training_data_X))
     
     predicted_test_Y = list(model.predict(test_data_X))
-    print "test_data_Y is:",test_data_Y
-    print "-------------------------------------------"
-    print "predicted_test_Y is:",predicted_test_Y
+    print("test_data_Y is:",test_data_Y)
+    print("-------------------------------------------")
+    print("predicted_test_Y is:",predicted_test_Y)
     R_Square = r2_score(test_data_Y, predicted_test_Y)
-    print "R_Square is ",R_Square
+    print("R_Square is ",R_Square)
 
-    """ counter = 0
-    print("for training data")
-    print("max data in training Y is: {}".format(max(training_data_Y)))
-    for i in range(len(predicted_training_Y)):
-        if abs(predicted_training_Y[i] - training_data_Y[i]) < BOUNDARY:
-            counter += 1
-    print("Training data: the accuracy rate with boundary {} is {}.".format(BOUNDARY, counter/len(predicted_training_Y)))
-
-    print("\nfor test data")
-    counter2 = 0
-
-    print("max data in test Y is: {}".format(max(test_data_Y)))
-    for j in range(len(predicted_test_Y)):
-        # print("{} {}".format(predicted_test_Y[j], test_data_Y[j]))
-        if abs(predicted_test_Y[j] - test_data_Y[j]) < BOUNDARY:
-            counter2 += 1
-    print("Test data: the accuracy rate with boundary {} is {}.".format(BOUNDARY, counter2/len(predicted_test_Y)))
- """
 
     # print(model.score(training_data_X, training_data_Y))
     # print(model.score(test_data_X, test_data_Y))
